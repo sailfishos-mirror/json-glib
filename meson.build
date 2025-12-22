@@ -65,12 +65,13 @@ endforeach
 
 cdata.set_quoted('GETTEXT_PACKAGE', json_gettext_domain)
 
+json_compile_args = []
 if get_option('default_library') == 'static'
-  cdata.set('JSON_STATIC_BUILD', true)
+  json_compile_args += ['-DJSON_STATIC_BUILD']
 endif
 
 if get_option('debug')
-  cdata.set('JSON_ENABLE_DEBUG', true)
+  json_compile_args += ['-DJSON_ENABLE_DEBUG']
 endif
 
 if cc.get_id() == 'msvc'
