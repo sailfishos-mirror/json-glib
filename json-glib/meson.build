@@ -84,7 +84,7 @@ json_lib = library(
   soversion: soversion,
   include_directories: root_dir,
   dependencies: [gio_dep],
-  c_args: json_c_args + common_cflags,
+  c_args: json_c_args + common_cflags + json_compile_args,
   link_args: common_ldflags,
   gnu_symbol_visibility: 'hidden',
   darwin_versions: darwin_versions,
@@ -95,6 +95,7 @@ pkgg = import('pkgconfig')
 pkgg.generate(
   libraries: json_lib,
   subdirs: json_api_name,
+  extra_cflags: json_compile_args,
   version: json_version,
   name: 'JSON-GLib',
   filebase: json_api_name,
@@ -129,6 +130,7 @@ endif
 
 json_glib_dep = declare_dependency(
   link_with: json_lib,
+  compile_args: json_compile_args,
   include_directories: root_dir,
   dependencies: [gio_dep],
   sources: [ json_enum_types_h, json_glib_gir ],
