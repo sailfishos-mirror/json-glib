@@ -510,7 +510,7 @@ json_path_compile (JsonPath    *path,
                           {
                             g_set_error_literal (error, JSON_PATH_ERROR,
                                                  JSON_PATH_ERROR_INVALID_QUERY,
-                                                 _("Slice step cannot be zero"));
+                                                 "Slice step cannot be zero");
                             goto fail;
                           }
 
@@ -613,7 +613,7 @@ json_path_compile (JsonPath    *path,
                           {
                             g_set_error_literal (error, JSON_PATH_ERROR,
                                                  JSON_PATH_ERROR_INVALID_QUERY,
-                                                 _("Slice step cannot be zero"));
+                                                 "Slice step cannot be zero");
                             goto fail;
                           }
                       }
