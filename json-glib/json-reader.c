@@ -128,6 +128,7 @@ struct _JsonReaderPrivate
 
   JsonNode *current_node;
   JsonNode *previous_node;
+  GPtrArray *node_stack;
 
   /* Stack of member names. */
   GPtrArray *members;
@@ -163,6 +164,9 @@ json_reader_finalize (GObject *gobject)
 
   if (priv->members != NULL)
     g_ptr_array_unref (priv->members);
+
+  if (priv->node_stack != NULL)
+    g_ptr_array_unref (priv->node_stack);
 
   G_OBJECT_CLASS (json_reader_parent_class)->finalize (gobject);
 }
@@ -235,6 +239,7 @@ json_reader_init (JsonReader *self)
 {
   self->priv = json_reader_get_instance_private (self);
   self->priv->members = g_ptr_array_new_with_free_func (g_free);
+  self->priv->node_stack = g_ptr_array_new ();
 }
 
 /**
@@ -535,6 +540,7 @@ json_reader_read_element (JsonReader *reader,
                                           "of the array at the current position."),
                                         index_);
 
+        g_ptr_array_add (priv->node_stack, priv->current_node);
         priv->previous_node = priv->current_node;
         priv->current_node = json_array_get_element (array, index_);
       }
@@ -552,6 +558,7 @@ json_reader_read_element (JsonReader *reader,
                                           "of the object at the current position."),
                                         index_);
 
+        g_ptr_array_add (priv->node_stack, priv->current_node);
         priv->previous_node = priv->current_node;
 
         members = json_object_get_members_internal (object);
@@ -594,16 +601,19 @@ json_reader_end_element (JsonReader *reader)
 
   priv = reader->priv;
 
-  if (priv->previous_node != NULL)
-    tmp = json_node_get_parent (priv->previous_node);
-  else
-    tmp = NULL;
+  tmp = (priv->node_stack->len > 0)
+    ? g_ptr_array_index (priv->node_stack, priv->node_stack->len - 1)
+    : NULL;
 
   if (json_node_get_node_type (priv->previous_node) == JSON_NODE_OBJECT)
     g_ptr_array_remove_index (priv->members, priv->members->len - 1);
 
-  priv->current_node = priv->previous_node;
-  priv->previous_node = tmp;
+  if (priv->node_stack->len > 0)
+    g_ptr_array_remove_index (priv->node_stack, priv->node_stack->len - 1);
+  priv->current_node = tmp;
+  priv->previous_node = (priv->node_stack->len > 0)
+    ? g_ptr_array_index (priv->node_stack, priv->node_stack->len - 1)
+    : NULL;
 }
 
 /**
@@ -731,6 +741,7 @@ json_reader_read_member (JsonReader  *reader,
                                     "object at the current position."),
                                   member_name);
 
+  g_ptr_array_add (priv->node_stack, priv->current_node);
   priv->previous_node = priv->current_node;
   priv->current_node = json_object_get_member (object, member_name);
   g_ptr_array_add (priv->members, g_strdup (member_name));
@@ -762,15 +773,18 @@ json_reader_end_member (JsonReader *reader)
 
   priv = reader->priv;
 
-  if (priv->previous_node != NULL)
-    tmp = json_node_get_parent (priv->previous_node);
-  else
-    tmp = NULL;
+  tmp = (priv->node_stack->len > 0)
+    ? g_ptr_array_index (priv->node_stack, priv->node_stack->len - 1)
+    : NULL;
 
   g_ptr_array_remove_index (priv->members, priv->members->len - 1);
 
-  priv->current_node = priv->previous_node;
-  priv->previous_node = tmp;
+  if (priv->node_stack->len > 0)
+    g_ptr_array_remove_index (priv->node_stack, priv->node_stack->len - 1);
+  priv->current_node = tmp;
+  priv->previous_node = (priv->node_stack->len > 0)
+    ? g_ptr_array_index (priv->node_stack, priv->node_stack->len - 1)
+    : NULL;
 }
 
 /**
