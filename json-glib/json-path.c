@@ -841,7 +841,7 @@ walk_path_node (GList      *path,
         {
           JsonArray *array = json_node_get_array (root);
           GList *elements, *l;
-          int i;
+          int i G_GNUC_UNUSED;
 
           elements = json_array_get_elements (array);
           for (l = elements, i = 0; l != NULL; l = l->next, i += 1)
